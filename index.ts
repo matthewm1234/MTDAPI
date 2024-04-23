@@ -18,8 +18,8 @@ app.use('/stream', authenticateToken, streamRoutes);
 app.use('/users', authenticateToken, userRoutes)
 app.use('/call', authenticateToken, callRoutes)
 
-app.post('/', (req, res) => {
-  res.json("success");
+app.get('/', (req, res) => {
+  res.json("Hello welcome matthew");
 });
 
 app.listen(3000, () => {
