@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { getDate } from '../../utils';
 import { verify } from 'crypto';
-// import { sendEmailToken } from '../services/emailService';
+import { sendEmailToken } from '../services/emailService';
 
 const EMAIL_TOKEN_EXPIRATION_MINUTES = 10;
 const AUTHENTICATION_EXPIRATION_HOURS = 12;
@@ -54,7 +54,7 @@ async function assignToken(res: any, email: string, name = null, phone = null, p
 
         console.log(createdToken);
         // TODO send emailToken to user's email
-        // await sendEmailToken(email, emailToken);
+        await sendEmailToken(email, emailToken);
         return res.sendStatus(200);
     } catch (e) {
         console.log(e);
