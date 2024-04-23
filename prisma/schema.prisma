@@ -1,0 +1,145 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  email    String @unique
+  password String
+
+  name       String?
+  phone      String? @unique
+  image      String?
+  // bio String?
+  isVerified Boolean @default(false)
+
+  tokens     Token[]
+  calls      Call[]
+  recordings Recording[] 
+}
+
+model Call {
+  id        Int      @id @default(autoincrement())
+  cId       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  type   String
+  number String
+  userId Int
+  User   User?  @relation(fields: [userId], references: [id])
+}
+
+model Recording {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  filename       String
+  url            String
+  duration       String
+  conversationId String?
+  jobId          String?
+  visible        Boolean  @default(true)
+  processed      Boolean  @default(false)
+  users          User[]
+  insight        Insight?
+  task           Task?
+}
+
+model Token {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  type       String // EMAIL|API
+  emailToken String? @unique
+
+  valid      Boolean  @default(true)
+  expiration DateTime
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+
+model Audio {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name           String  @unique
+  conversationId String?
+  jobId          String?
+}
+
+model Task {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  description   String
+  recordId      Int?           @unique
+  record        Recording?     @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  status_change StatusChange[]
+}
+
+model StatusChange {
+  id     Int      @id @default(autoincrement())
+  status String
+  date   DateTime
+  taskId Int
+  task   Task     @relation(fields: [taskId], references: [id])
+}
+
+model Insight {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  record        Recording?      @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  recordId      Int?            @unique
+  summary       Summary?
+  topics        Topics[]
+  transcription Transcription[]
+}
+
+model Summary {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  text      String
+  insight   Insight  @relation(fields: [insightId], references: [id])
+  insightId Int      @unique
+}
+
+model Topics {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  text      String
+  insight   Insight  @relation(fields: [insightId], references: [id])
+  insightId Int
+}
+
+model Transcription {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  startTime String
+  endTime   String
+  sentiment String
+  speaker   String?
+  message   String
+
+  insight   Insight @relation(fields: [insightId], references: [id])
+  insightId Int
+}

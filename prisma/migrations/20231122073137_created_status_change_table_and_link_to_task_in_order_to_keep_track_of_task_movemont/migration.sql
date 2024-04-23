@@ -1,0 +1,8 @@
+-- CreateTable
+CREATE TABLE "StatusChange" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "status" TEXT NOT NULL,
+    "date" DATETIME NOT NULL,
+    "taskId" INTEGER NOT NULL,
+    CONSTRAINT "StatusChange_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Task" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
