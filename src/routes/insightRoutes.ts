@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
                         id: user.id,
                     }
                 },
-                AND:{
+                AND: {
                     visible: true
                 }
             }
@@ -28,11 +28,12 @@ router.get('/', async (req, res) => {
             record: {
                 include: {
                     users: true
-                }
+                },
+
             },
         },
     });
-    insights = insights.filter((insight) => insight?.record?.users[0].id == user.id)
+    insights = insights.filter((insight) => insight?.record?.users[0].id != user.id)
     res.status(200).json(insights);
 })
 
@@ -45,7 +46,9 @@ router.post('/', async (req, res) => {
             if (messages.length || topics.length || summary) {
                 const insight = await tx.insight.create({
                     data: {
-                        recordId
+                        record: {
+                            connect: { id: recordId }
+                        }
                     }
                 })
                 if (messages.length) {

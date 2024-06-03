@@ -16,6 +16,9 @@ router.get('/', async (req, res) => {
         }
 
         const allUser = await prisma.user.findMany({
+            where:{
+                isVerified: true
+            },
             select: {
                 id: true,
                 email: true,

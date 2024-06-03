@@ -109,7 +109,7 @@ router.get('/:date/:status', async (req, res) => {
             }
         },
     });
-    tasks = tasks.filter((task) => task?.record?.users[0].id == user.id);
+    tasks = tasks.filter((task) => task?.record?.users[0].id != user.id);
     res.json(tasks.filter((task) => task.status_change.length > 0 && (status == null || task.status_change[0].status === status)).map((task) => ({
         id: task.id,
         description: task.description,

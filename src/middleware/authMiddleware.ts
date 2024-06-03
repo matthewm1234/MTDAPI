@@ -21,7 +21,7 @@ export async function authenticateToken(
   }
   // decode the jwt token
   try {
-    const payload = (await jwt.verify(jwtToken, JWT_SECRET)) as {
+    const payload = ( jwt.verify(jwtToken, JWT_SECRET)) as {
       tokenId: number;
     };
     const dbToken = await prisma.token.findUnique({

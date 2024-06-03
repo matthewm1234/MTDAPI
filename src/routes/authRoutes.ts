@@ -6,7 +6,7 @@ import { verify } from 'crypto';
 import { sendEmailToken } from '../services/emailService';
 
 const EMAIL_TOKEN_EXPIRATION_MINUTES = 10;
-const AUTHENTICATION_EXPIRATION_HOURS = 12;
+const AUTHENTICATION_EXPIRATION_HOURS =  720;
 const JWT_SECRET = process.env.JWT_SECRET || 'SUPER SECRET';
 
 const router = Router();
@@ -46,7 +46,7 @@ async function assignToken(res: any, email: string, name = null, phone = null, p
                 user: {
                     connectOrCreate: {
                         where: { email },
-                        create: { email, name, phone, password: hash },
+                        create: { email, name, password: hash },
                     },
                 },
             },
@@ -54,7 +54,7 @@ async function assignToken(res: any, email: string, name = null, phone = null, p
 
         console.log(createdToken);
         // TODO send emailToken to user's email
-        await sendEmailToken(email, emailToken);
+        // await sendEmailToken(email, emailToken);
         return res.sendStatus(200);
     } catch (e) {
         console.log(e);
@@ -66,7 +66,7 @@ async function assignToken(res: any, email: string, name = null, phone = null, p
 // Create a user, if it doesn't exist,
 // generate the emailToken and send it to their email
 router.post('/signup', async (req, res) => {
-    const { name, email, phone, password } = req.body;
+    const { name, email, password } = req.body;
     const user = await prisma.user.findUnique({
         where: { email: email },
     });
@@ -77,7 +77,7 @@ router.post('/signup', async (req, res) => {
         await assignToken(res, email)
     }
     else {
-        await assignToken(res, email, name, phone, password)
+        await assignToken(res, email, name, password)
     }
 });
 
@@ -155,12 +155,36 @@ router.post('/authenticate', async (req, res) => {
         return res.status(401).json({ error: 'Token expired!' });
     }
 
+    // Here we validated that the user is the owner of the email
     if (dbEmailToken?.user?.email !== email) {
         return res.sendStatus(401);
     }
 
-    // Here we validated that the user is the owner of the email
+    // Invalidate the token
+    await prisma.token.update({
+        where: { id: dbEmailToken.id },
+        data: { valid: false },
+    });
 
+    return res.sendStatus(200);
+});
+
+router.post('/phone_link', async (req, res) => {
+    const { email, phone } = req.body;
+    console.log(phone)
+    // Account verified
+    const user = await prisma.user.update({
+        where: { email: email },
+        data: { isVerified: true, phone: phone },
+        select: {
+            id: true,
+            email: true,
+            name: true,
+            phone: true,
+            image: true,
+            isVerified: true,
+        }
+    });
     // generate an API token
     const expiration = new Date(
         getDate().getTime() + AUTHENTICATION_EXPIRATION_HOURS * 60 * 60 * 1000
@@ -177,29 +201,8 @@ router.post('/authenticate', async (req, res) => {
         },
     });
 
-    // Invalidate the email
-    await prisma.token.update({
-        where: { id: dbEmailToken.id },
-        data: { valid: false },
-    });
-
-    // Account verified
-    const user = await prisma.user.update({
-        where: { email: email },
-        data: { isVerified: true },
-        select: {
-            id: true,
-            email: true,
-            name: true,
-            phone: true,
-            image: true,
-            isVerified: true,
-        }
-    });
-    // generate the JWT token
     const authToken = generateAuthToken(apiToken.id);
 
     return res.json({ user, authToken });
-});
-
+})
 export default router;

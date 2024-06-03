@@ -157,7 +157,7 @@ router.get('/records', async (req, res) => {
                 insight: true,
             },
         });
-        records = records.filter((record) => record.users[0].id == user.id)
+        records = records.filter((record) => record.users[0].id != user.id)
         res.status(200).json(records);
     } catch (e) {
         res.status(400).json({ error: `Failed to get the records` });
