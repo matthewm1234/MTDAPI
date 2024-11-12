@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -24,9 +24,73 @@ model User {
   // bio String?
   isVerified Boolean @default(false)
 
-  tokens     Token[]
-  calls      Call[]
-  recordings Recording[] 
+  tokens       Token[]
+  calls        Call[]
+  recordings   Recording[]
+  devices      Device[]
+  appointments Appointment[]
+  incomingCall IncomingCall?
+}
+
+model Appointment {
+  id            String                @id @default(uuid())
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  date          DateTime
+  time          String
+  title         String
+  location      String
+  ownerId       Int
+  participantNo String
+  shared        Boolean               @default(false)
+  users         User[]
+  snapshots     AppointmentSnapshot[]
+  notifications Notification[]
+}
+
+model AppointmentSnapshot {
+  id            String         @id @default(uuid())
+  createdAt     DateTime       @default(now())
+  date          DateTime
+  time          String
+  title         String
+  location      String
+  appointmentId String
+  appointment   Appointment    @relation(fields: [appointmentId], references: [id])
+  notifications Notification[]
+}
+
+model Notification {
+  id                    String              @id @default(uuid())
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  participantId         Int
+  appointmentId         String
+  appointmentSnapshotId String
+  counter               Int                 @default(1)
+  snapshot              AppointmentSnapshot @relation(fields: [appointmentSnapshotId], references: [id])
+  appointment           Appointment         @relation(fields: [appointmentId], references: [id])
+}
+
+model Device {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deviceId  String
+  platform  String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model IncomingCall {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  android   Boolean
+  ios       Boolean
+  web       Boolean
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Call {
@@ -56,6 +120,7 @@ model Recording {
   users          User[]
   insight        Insight?
   task           Task?
+  captioned      Boolean  @default(false)
 }
 
 model Token {

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
             },
         },
     });
-    insights = insights.filter((insight) => insight?.record?.users[0].id != user.id)
+    insights = insights.filter((insight) => insight?.record?.captioned === true)
     res.status(200).json(insights);
 })
 
@@ -43,7 +43,7 @@ router.post('/', async (req, res) => {
     const { summary, topics, messages, recordId } = req.body;
     try {
         await prisma.$transaction(async (tx) => {
-            if (messages.length || topics.length || summary) {
+            if (messages?.length || topics?.length || summary) {
                 const insight = await tx.insight.create({
                     data: {
                         record: {
@@ -63,8 +63,8 @@ router.post('/', async (req, res) => {
                                 insight: {
                                     connect: {
                                         id: insight.id
-                                    }
-                                }
+                                    },
+                                },
                             }
                         })
                     });
@@ -97,9 +97,15 @@ router.post('/', async (req, res) => {
                 }
             }
             res.status(200).json("OK");
-        })
+        },
+            {
+                maxWait: 5000, // default: 2000
+                timeout: 10000, // default: 5000
+                isolationLevel: Prisma.TransactionIsolationLevel.Serializable, // optional, default defined by database configuration
+            }
+        )
     } catch (e) {
-        console.log("I instigated this", e)
+        console.log( "I instigated this", e)
         res.status(400).json({ error: 'An Error Occurs' });
     }
 

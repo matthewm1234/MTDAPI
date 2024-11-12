@@ -17,7 +17,7 @@ export async function authenticateToken(
   const authHeader = req.headers['authorization'];
   const jwtToken = authHeader?.split(' ')[1];
   if (!jwtToken) {
-    return res.sendStatus(401);
+    return res.sendStatus(401).json({ error: 'No valid API token' });
   }
   // decode the jwt token
   try {
@@ -34,7 +34,7 @@ export async function authenticateToken(
     }
     req.user = dbToken.user;
   } catch (e) {
-    return res.sendStatus(401);
+    return res.sendStatus(401).json({ error: e });
   }
 
   next();

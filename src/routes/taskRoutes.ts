@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { getDate } from "../../utils";
 
 const router = Router();
@@ -15,7 +15,7 @@ router.post('/', async (req, res) => {
     try {
         await prisma.$transaction(async (tx) => {
             if (data.actionItems.length) {
-                data.actionItems.forEach(async (item: any) => {
+                await Promise.all(data.actionItems.forEach(async (item: any) => {
                     const task = await tx.task.create({
                         data: {
                             description: item.text,
@@ -34,10 +34,15 @@ router.post('/', async (req, res) => {
                         }
                     })
 
-                });
+                }));
             }
 
-        })
+        },
+            {
+                maxWait: 5000, // default: 2000
+                timeout: 10000, // default: 5000
+                isolationLevel: Prisma.TransactionIsolationLevel.Serializable, // optional, default defined by database configuration
+            })
         console.log("test was successfully");
         res.status(200).json("success");
     } catch (e) {
@@ -105,11 +110,12 @@ router.get('/:date/:status', async (req, res) => {
                             topics: true
                         }
                     }
-                }
+                },
+                
             }
         },
     });
-    tasks = tasks.filter((task) => task?.record?.users[0].id != user.id);
+    tasks = tasks.filter((task) => task?.record?.captioned === true);
     res.json(tasks.filter((task) => task.status_change.length > 0 && (status == null || task.status_change[0].status === status)).map((task) => ({
         id: task.id,
         description: task.description,

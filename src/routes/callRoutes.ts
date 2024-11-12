@@ -109,8 +109,10 @@ router.post('/record', async (req, res) => {
                 url,
                 duration,
                 users: {
-                    connect: [{ id: users.owner }, { phone: users.participant }]
-                }
+                    connect: [{ id: users.owner }, { phone: users.participant }],
+                },
+                //Because prisma reorders during connect, this is important
+                captioned: true
             },
             select: {
                 id: true,
@@ -155,9 +157,13 @@ router.get('/records', async (req, res) => {
                 jobId: true,
                 createdAt: true,
                 insight: true,
+                captioned: true
             },
+            orderBy: {
+                createdAt: "desc"
+            }
         });
-        records = records.filter((record) => record.users[0].id != user.id)
+        records = records.filter((record) => record.captioned === true)
         res.status(200).json(records);
     } catch (e) {
         res.status(400).json({ error: `Failed to get the records` });
@@ -192,4 +198,5 @@ router.put('/record/:id', async (req, res) => {
         res.status(400).json({ error: `Failed to update the Audio` });
     }
 });
+
 export default router;

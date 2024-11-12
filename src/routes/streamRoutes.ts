@@ -7,7 +7,6 @@ import { PrismaClient } from ".prisma/client";
 const STREAM_API_KEY = process.env.STREAM_API_KEY ?? '';
 const STREAM_API_SECRET = process.env.STREAM_API_SECRET ?? '';
 const JWT_SECRET = process.env.JWT_SECRET || 'SUPER SECRET';
-
 // Initialize a Server Client
 const serverClient = StreamChat.getInstance(STREAM_API_KEY, STREAM_API_SECRET);
 const prisma = new PrismaClient();
@@ -25,7 +24,7 @@ router.get('/', async (req, res) => {
 
         // Create User Token
         const token = serverClient.createToken(user.phone ?? '08128131961');
-
+        console.log("STREAM_API_KEY", STREAM_API_KEY)
         // TODO implement
         // console.log("manage to get here")
 
